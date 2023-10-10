@@ -7,6 +7,10 @@
 using Microsoft.MixedReality.Toolkit.Subsystems;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Networking;
+using System.Collections;
+using System.Web;
+using System.Collections.Generic;
 
 namespace Microsoft.MixedReality.Toolkit.Examples.Demos
 {
@@ -95,6 +99,7 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos
         private void DictationSubsystem_Recognized(DictationResultEventArgs obj)
         {
             OnSpeechRecognized.Invoke("Recognized:" + obj.Result);
+            StartCoroutine(GetText(obj.Result));
         }
 
         private void DictationSubsystem_Recognizing(DictationResultEventArgs obj)
@@ -131,6 +136,28 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos
             {
                 keywordRecognitionSubsystem.Start();
                 keywordRecognitionSubsystem = null;
+            }
+        }
+        // https://m-ansley.medium.com/unity-web-requests-downloading-and-working-with-json-text-9042b8e001e4
+        private IEnumerator GetText(string text)
+        {
+            string url = "http://ec2-54-84-186-136.compute-1.amazonaws.com:8080?question=";
+            url += HttpUtility.UrlEncode(text);
+            Debug.Log(url);
+            using (UnityWebRequest request = UnityWebRequest.Get(url))
+            {
+                yield return request.SendWebRequest();
+                if((request.result == UnityWebRequest.Result.ProtocolError)
+                    || (request.result == UnityWebRequest.Result.ConnectionError))
+                {
+                    Debug.LogError(request.error);
+                }
+                else
+                {
+                    Debug.Log("Successfully downloaded text");
+
+                    OnSpeechRecognized.Invoke(request.downloadHandler.text);
+                }
             }
         }
     }
