@@ -18,9 +18,21 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos
     /// Demonstration script showing how to subscribe to and handle
     /// events fired by <see cref="DictationSubsystem"/>.
     /// </summary>
+    using Speech.Windows;
+
+    [RequireComponent(typeof(AudioSource))]
     [AddComponentMenu("MRTK/Examples/Dictation Handler")]
     public class DictationHandler : MonoBehaviour
     {
+        [SerializeField]
+        [Tooltip("The audio source where speech will be played.")]
+        private AudioSource audioSource;
+
+        public AudioSource AudioSource
+        {
+            get { return audioSource; }
+            set { audioSource = value; }
+        }
         /// <summary>
         /// Wrapper of UnityEvent&lt;string&gt; for serialization.
         /// </summary>
@@ -138,6 +150,9 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos
                 keywordRecognitionSubsystem = null;
             }
         }
+       
+
+
         // https://m-ansley.medium.com/unity-web-requests-downloading-and-working-with-json-text-9042b8e001e4
         private IEnumerator GetText(string text)
         {
@@ -157,6 +172,8 @@ namespace Microsoft.MixedReality.Toolkit.Examples.Demos
                     Debug.Log("Successfully downloaded text");
 
                     OnSpeechRecognized.Invoke(request.downloadHandler.text);
+                    TextToSpeechSubsystem textToSpeechSubsystem = XRSubsystemHelpers.GetFirstRunningSubsystem<TextToSpeechSubsystem>();
+                    textToSpeechSubsystem.TrySpeak(request.downloadHandler.text, audioSource);
                 }
             }
         }
